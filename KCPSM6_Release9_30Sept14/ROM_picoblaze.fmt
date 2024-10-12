@@ -1,0 +1,4 @@
+       LOAD sA, FE   ; write initial value: 11111110
+START: OUTPUT sA, 00 ; Write sA to OUT_PORT
+       RL sA         ; rotate register sA, i.e. 11111110 -> 11111101
+       JUMP START    ; Jump to beginning (infinite loop)
