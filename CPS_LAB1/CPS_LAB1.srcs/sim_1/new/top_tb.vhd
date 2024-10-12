@@ -99,6 +99,36 @@ begin
         AD_SDOUT    <=  RIGHT_CHANNEL(i);
     end loop;
     
+    wait until rising_edge(DA_LRCK);
+    
+    for i in 23 downto 0 loop
+        wait until falling_edge(AD_SCLK);
+        AD_SDOUT    <=  LEFT_CHANNEL(i);
+    end loop;
+    
+    wait until rising_edge(AD_LRCK);
+    
+    for i in 23 downto 0 loop
+        wait until falling_edge(AD_SCLK);
+        AD_SDOUT    <=  RIGHT_CHANNEL(i);
+    end loop;
+    
+    wait until rising_edge(DA_LRCK);
+    
+    for i in 23 downto 0 loop
+        wait until falling_edge(AD_SCLK);
+        AD_SDOUT    <=  LEFT_CHANNEL(i);
+    end loop;
+    
+    wait until rising_edge(AD_LRCK);
+    
+    for i in 23 downto 0 loop
+        wait until falling_edge(AD_SCLK);
+        AD_SDOUT    <=  RIGHT_CHANNEL(i);
+    end loop;
+    
+    wait until rising_edge(DA_LRCK);
+    
     wait for 100ns;
     
     wait for 100 us;

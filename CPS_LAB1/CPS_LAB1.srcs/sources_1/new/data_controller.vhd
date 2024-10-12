@@ -65,7 +65,7 @@ begin
             shift_out_en<= '0';
         end if;
         
-        if ((div_clk_i(10 downto 0) = '0'&(9 downto 0=>'1')) or (div_clk_i(11 downto 0) = '0'&(10 downto 0=>'1'))) then
+        if ((div_clk_i(10 downto 0) = '0'&(9 downto 0=>'1')) or (div_clk_i(11 downto 0) = '0'&(10 downto 0=>'1')) or (div_clk_i = (11 downto 0=>'0'))) then
             load_out    <=  '1';
             shift_out_en<=  '1';
         else
@@ -74,6 +74,7 @@ begin
     end if;
 
 end process;
+
 shift_in_en_o   <=  shift_in_en;
 shift_out_en_o  <=  shift_out_en;
 load_out_o      <=  load_out;
