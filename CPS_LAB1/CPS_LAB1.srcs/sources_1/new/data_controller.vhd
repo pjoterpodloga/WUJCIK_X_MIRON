@@ -59,9 +59,13 @@ begin
     elsif (rising_edge(clk_i)) then
         if (div_clk_i(4 downto 0) = "01111") then
             shift_in_en <= '1';
-            shift_out_en<= '1';
         else
             shift_in_en <= '0';
+        end if;
+        
+        if (div_clk_i(4 downto 0) = "11111") then
+            shift_out_en<= '1';
+        else
             shift_out_en<= '0';
         end if;
         

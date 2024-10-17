@@ -96,7 +96,7 @@ signal  DA_MCLK_INT :   std_logic;
 
 signal  DATA_INT    :   std_logic_vector(REG_SIZE-1 downto 0);
 
-signal  LED_INT     :   std_logic_vector(15 downto  0)  :=  (others=>'0');
+signal  LED_INT     :   std_logic_vector(30 downto  0)  :=  (others=>'0');
 
 signal  load_int        :   std_logic;
 signal  shift_out_int   :   std_logic;
@@ -153,12 +153,12 @@ LED_LOAD: process(load_int)
 begin
 
     if (rising_edge(load_int)) then
-        LED_INT <= DATA_INT(23 downto 8);
+        LED_INT <=  std_logic_vector(abs(signed(DATA_INT(30 downto 0))));
     end if;
 
 end process;
 
-LED     <=  LED_INT;
+LED     <=  LED_INT(30 downto 15);
 
 AD_CS_INT   <=  div_out(10);
 AD_SCLK_INT <=  div_out(4);
