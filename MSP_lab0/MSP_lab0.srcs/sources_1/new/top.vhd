@@ -33,10 +33,12 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity top is
     Port (
-    clk_i       :   in std_logic;
-    rst_i       :   in std_logic;
-    led_clk_o   :   out std_logic;
-    led_o       :   out std_logic_vector(7 downto 0));
+    clk_i       :   in  std_logic;
+    rst_i       :   in  std_logic;
+    button_i    :   in  std_logic_vector(3 downto 0);
+    leds_o      :   out std_logic_vector(7 downto 0);
+    led7_an_o   :   out std_logic_vector(7 downto 0);
+    led7_seg_o  :   out std_logic_vector(7 downto 0));
 end top;
 
 architecture Behavioral of top is
@@ -88,10 +90,21 @@ component display_controller is
     Port (
         clk_i       :   in  std_Logic;
         rst_i       :   in  std_logic;
-        digit_i     :   in  std_logic_vector(19 downto 0);
+        digit_i     :   in  std_logic_vector(15 downto 0);
+        digit_en_i  :   in  std_logic_vector(3  downto 0);
         led7_an_o   :   out std_logic_vector(3  downto 0);
         led7_seg_o  :   out std_logic_vector(7  downto 0));
 end component display_controller;
+
+component debounce is
+    Generic (
+        WAIT_MS     :   natural :=  100);
+    Port (
+        clk_i       :   in  std_logic;
+        rst_i       :   in  std_logic;
+        button_i    :   in  std_logic_vector;
+        button_o    :   out std_logic_vector);
+end component debounce;
 
 signal  addr    :   std_logic_vector(11 downto 0);
 signal  inst    :   std_logic_vector(17 downto 0);
@@ -105,6 +118,7 @@ signal  clk_div_out :   std_logic;
 signal  digit_int   :   std_logic_vector(15 downto 0);
 
 signal  out_port    :   std_logic_vector(7 downto 0);
+signal  in_port     :   std_logic_vector(7 downto 0);
 
 begin
 
@@ -153,15 +167,27 @@ DISPLAY:    display_controller
         clk_i   =>  clk_i,
         rst_i   =>  rst_i,
         digit_i =>  digit_int,
-        led7_an_o   =>  open,
-        led7_seg_o  =>  open);
+        digit_en_i  =>  "0001",
+        led7_an_o   =>  led7_an_o(3 downto 0),
+        led7_seg_o  =>  led7_seg_o);
 
-digit_int   <=  (19 downto 5=>'0')&'1'&out_port(3 downto 0);
+DEB_BTN:    debounce
+    GENERIC MAP(
+        WAIT_MS =>  50)
+    
+    PORT MAP(
+        clk_i       =>  clk_i,
+        rst_i       =>  rst_i,
+        button_i    =>  button_i,
+        button_o    =>  in_port(3 downto 0));
+
+digit_int(3  downto 0)  <=  out_port(3 downto 0);
+digit_int(15 downto 4)  <=  (others=>'0');
 
 clk_div_in  <=  clk_i;
 reset       <=  rdl or rst_i;
 
-led_clk_o   <=  clk_div_out;
-led_o   <=  out_port;
+in_port(7 downto 4)     <= (others=>'0');
+led7_an_o(7 downto 4)   <= (others=>'1');
 
 end Behavioral;
