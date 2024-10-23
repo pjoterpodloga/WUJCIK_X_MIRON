@@ -167,7 +167,7 @@ DISPLAY:    display_controller
         clk_i   =>  clk_i,
         rst_i   =>  rst_i,
         digit_i =>  digit_int,
-        digit_en_i  =>  "0001",
+        digit_en_i  =>  "1111",
         led7_an_o   =>  led7_an_o(3 downto 0),
         led7_seg_o  =>  led7_seg_o);
 

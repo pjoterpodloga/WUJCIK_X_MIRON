@@ -94,7 +94,7 @@ begin
         if (div_out = '0') then
             clk_last_state <= '0';
         
-        elsif (clk_last_state /= clk_i) then
+        elsif (clk_last_state /= div_out) then
         
             clk_last_state <= '1';
         

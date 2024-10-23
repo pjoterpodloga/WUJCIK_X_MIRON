@@ -1,0 +1,22 @@
+		CONSTANT	btn1_mask,	00000001'b
+		CONSTANT	btn2_mask,	00000010'b
+		NAMEREG	sA,	btn_reg
+		NAMEREG	sB,	cntr_reg
+		NAMEREG	sC,	cmp_reg
+		LOAD	btn_reg,	00		;Clear buttons flag register
+		LOAD	cntr_reg,	00	;Clear counter register
+START: 	OUTPUT	cntr_reg,	00 	; Write sA to OUT_PORT        
+		INPUT	btn_reg,	00		; Read buttons state
+		LOAD	cmp_reg,	btn_reg			; Clear compare register
+		AND		cmp_reg,	btn1_mask
+		COMPARE	cmp_reg,	01
+		JUMP	NZ,	BTN_2
+		ADD	cntr_reg, 01
+BTN_2:	LOAD	cmp_reg,	btn_reg			; Clear compare register
+		AND		cmp_reg,	btn2_mask
+		SR		cmp_reg,	1
+		COMPARE	cmp_reg,	01
+		JUMP	NZ,	BTN_END
+		ADD	cntr_reg, 01
+BTN_END:	ADD	cntr_reg,	10
+		JUMP START     			; Jump to beginning (infinite loop)

@@ -45,7 +45,7 @@ architecture Behavioral of display_controller is
 
     constant    DISPLAY_REFRESH_RATE    :   NATURAL :=  1_000;
     constant    CLOCK_FREQUENCY         :   NATURAL :=  100_000_000;
-    constant    MUX_NDIV                :   NATURAL :=  CLOCK_FREQUENCY / DISPLAY_REFRESH_RATE ;
+    constant    MUX_NDIV                :   NATURAL :=  100_000;
     
     component divider is
         Generic (
@@ -62,41 +62,41 @@ architecture Behavioral of display_controller is
     begin
     
         if  (hex_in = "XXXX") then
-            seg_out := not  "00000000";  -- blank
+            seg_out := "00000000";  -- blank
         elsif (hex_in = "0000") then
-            seg_out := not  "11111100";  -- 0
+            seg_out := "11111100";  -- 0
         elsif (hex_in = "0001") then
-            seg_out := not  "01100000";  -- 1
+            seg_out := "01100000";  -- 1
         elsif (hex_in = "0010") then
-            seg_out := not  "11011010";  -- 2
+            seg_out := "11011010";  -- 2
         elsif (hex_in = "0011") then
-            seg_out := not  "11110010";  -- 3
+            seg_out := "11110010";  -- 3
         elsif (hex_in = "0100") then
-            seg_out := not  "01100110";  -- 4
+            seg_out := "01100110";  -- 4
         elsif (hex_in = "0101") then
-            seg_out := not  "10110110";  -- 5
+            seg_out := "10110110";  -- 5
         elsif (hex_in = "0110") then
-            seg_out := not  "10111110";  -- 6
+            seg_out := "10111110";  -- 6
         elsif (hex_in = "0111") then
-            seg_out := not  "11100000";  -- 7
+            seg_out := "11100000";  -- 7
         elsif (hex_in = "1000") then
-            seg_out := not  "11111110";  -- 8
+            seg_out := "11111110";  -- 8
         elsif (hex_in = "1001") then
-            seg_out := not  "11110110";  -- 9
+            seg_out := "11110110";  -- 9
         elsif (hex_in = "1010") then
-            seg_out := not  "11101110";  -- A
+            seg_out := "11101110";  -- A
         elsif (hex_in = "1011") then
-            seg_out := not  "00111110";  -- B
+            seg_out := "00111110";  -- B
         elsif (hex_in = "1100") then
-            seg_out := not  "00011010";  -- C
+            seg_out := "00011010";  -- C
         elsif (hex_in = "1101") then
-            seg_out := not  "01111010";  -- D
+            seg_out := "01111010";  -- D
         elsif (hex_in = "1110") then
-            seg_out := not  "10011110";  -- E
+            seg_out := "10011110";  -- E
         elsif (hex_in = "1111") then
-            seg_out := not  "10001110";  -- F
+            seg_out := "10001110";  -- F
         else
-            seg_out := not  "00000000";  -- blank
+            seg_out := "00000000";  -- blank
         end if;
         
         return seg_out;
@@ -116,7 +116,6 @@ architecture Behavioral of display_controller is
     signal  next_display_state      :   display_state_type  :=  display_blank;
     
     signal  clk_mux         :   std_logic;
-    signal  clk_last_state  :   std_logic   :=  '0';
     
 begin
 
@@ -143,20 +142,13 @@ begin
     
     end process;
 
-    MULTIPLEX: process(clk_i, rst_i)
+    MULTIPLEX: process(clk_mux, rst_i)
     begin
     
         if (rst_i = '1') then
             current_display_state   <=  display_blank;
-        elsif rising_edge(clk_i) then
-        
-            if clk_mux = '0' then
-                clk_last_state  <=  '0';
-            elsif clk_last_state /= clk_mux then
-                clk_last_state <=  '1';
-                current_display_state   <=  next_display_state;
-            end if;
-
+        elsif rising_edge(clk_mux) then
+            current_display_state   <=  next_display_state;
         end if;
     
     end process;
@@ -175,7 +167,7 @@ begin
                         hex_2_seg(digit_2)  when current_display_state = display_seg2   else
                         hex_2_seg(digit_3)  when current_display_state = display_seg3   else x"00";
                     
-    led7_an_o   <=  not led7_an_o_int and digit_en_i;
+    led7_an_o   <=  not (led7_an_o_int and digit_en_i);
     led7_seg_o  <=  not led7_seg_o_int;
     
 end Behavioral;
