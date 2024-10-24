@@ -45,9 +45,8 @@
 -- PART OF THIS FILE AT ALL TIMES.
 -- 
 -- DO NOT MODIFY THIS FILE.
-
 -- IP VLNV: xilinx.com:ip:cic_compiler:4.0
--- IP Revision: 14
+-- IP Revision: 16
 
 -- The following code must appear in the VHDL architecture header.
 
@@ -59,7 +58,7 @@ COMPONENT cic_compiler_0
     s_axis_data_tvalid : IN STD_LOGIC;
     s_axis_data_tready : OUT STD_LOGIC;
     m_axis_data_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
-    m_axis_data_tvalid : OUT STD_LOGIC
+    m_axis_data_tvalid : OUT STD_LOGIC 
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -82,4 +81,6 @@ your_instance_name : cic_compiler_0
 -- You must compile the wrapper file cic_compiler_0.vhd when simulating
 -- the core, cic_compiler_0. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
+
+
 

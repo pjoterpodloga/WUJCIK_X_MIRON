@@ -1,4 +1,4 @@
 vhdl xil_defaultlib  \
-"../../../../CPS_LAB2.srcs/sources_1/ip/cic_compiler_0/sim/cic_compiler_0.vhd" \
+"../../../../CPS_LAB2.gen/sources_1/ip/cic_compiler_0/sim/cic_compiler_0.vhd" \
 
 nosort

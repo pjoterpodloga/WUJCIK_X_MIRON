@@ -4,10 +4,10 @@
 -makelib xcelium_lib/axi_utils_v2_0_6 \
   "../../../ipstatic/hdl/axi_utils_v2_0_vh_rfs.vhd" \
 -endlib
--makelib xcelium_lib/cic_compiler_v4_0_14 \
+-makelib xcelium_lib/cic_compiler_v4_0_16 \
   "../../../ipstatic/hdl/cic_compiler_v4_0_vh_rfs.vhd" \
 -endlib
 -makelib xcelium_lib/xil_defaultlib \
-  "../../../../CPS_LAB2.srcs/sources_1/ip/cic_compiler_0/sim/cic_compiler_0.vhd" \
+  "../../../../CPS_LAB2.gen/sources_1/ip/cic_compiler_0/sim/cic_compiler_0.vhd" \
 -endlib
 

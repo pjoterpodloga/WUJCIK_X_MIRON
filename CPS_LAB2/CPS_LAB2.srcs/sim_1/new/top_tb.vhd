@@ -131,7 +131,7 @@ begin
     
     wait for 100ns;
     
-    wait for 100 us;
+    wait for 1000 us;
 
     finish;
 end process;

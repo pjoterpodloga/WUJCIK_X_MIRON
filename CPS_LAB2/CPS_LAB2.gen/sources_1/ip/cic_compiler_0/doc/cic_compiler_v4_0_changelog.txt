@@ -1,3 +1,88 @@
+2022.2:
+ * Version 4.0 (Rev. 16)
+ * No changes
+
+2022.1.2:
+ * Version 4.0 (Rev. 16)
+ * No changes
+
+2022.1.1:
+ * Version 4.0 (Rev. 16)
+ * No changes
+
+2022.1:
+ * Version 4.0 (Rev. 16)
+ * Feature Enhancement: Add support for 2-stage filters.
+ * Feature Enhancement: Add timeout to demo testbench.
+
+2021.2.2:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2021.2.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2021.2:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2021.1.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2021.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.3:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.2.2:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.2.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.2:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.1.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2020.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2019.2.2:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2019.2.1:
+ * Version 4.0 (Rev. 15)
+ * No changes
+
+2019.2:
+ * Version 4.0 (Rev. 15)
+ * General: changing polarity of CE in metadata. No change to functionality.
+
+2019.1.3:
+ * Version 4.0 (Rev. 14)
+ * No changes
+
+2019.1.2:
+ * Version 4.0 (Rev. 14)
+ * No changes
+
+2019.1.1:
+ * Version 4.0 (Rev. 14)
+ * No changes
+
 2019.1:
  * Version 4.0 (Rev. 14)
  * General: Addressing DRC warning in comb.
@@ -135,7 +220,7 @@
  * Native Vivado Release
  * There have been no functional or interface changes to this IP.  The version number has changed to support unique versioning in Vivado starting with 2013.1.
 
-(c) Copyright 2007 - 2019 Xilinx, Inc. All rights reserved.
+(c) Copyright 2007 - 2022 Xilinx, Inc. All rights reserved.
 
 This file contains confidential and proprietary information
 of Xilinx, Inc. and is protected under U.S. and

@@ -182,13 +182,13 @@ begin
     if (rising_edge(load_int)) then
         LED_INT <=  std_logic_vector(abs(signed(DATA_OUT_INT(30 downto 0))));
         
-        if (AD_CS_INT = '0') then
+        if (AD_CS_INT = '1') then
         
             counter <= counter + 1;
         
             if(counter = 0) then
                 FDATA_IN    <= DATA_IN_INT(30 downto 7);
-            elsif (counter = 8) then
+            elsif (counter = 7) then
                 counter <= 0;
             end if;
             

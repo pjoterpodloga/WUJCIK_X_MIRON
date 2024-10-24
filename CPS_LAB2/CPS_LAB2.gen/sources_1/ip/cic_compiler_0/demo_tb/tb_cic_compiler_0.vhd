@@ -107,9 +107,10 @@ architecture tb of tb_cic_compiler_0 is
   -----------------------------------------------------------------------
   -- Timing constants
   -----------------------------------------------------------------------
-  constant CLOCK_PERIOD : time := 100 ns;
-  constant T_HOLD       : time := 10 ns;
-  constant T_STROBE     : time := CLOCK_PERIOD - (1 ns);
+  constant CLOCK_PERIOD : time    := 100 ns;
+  constant T_HOLD       : time    := 10 ns;
+  constant T_STROBE     : time    := CLOCK_PERIOD - (1 ns);
+  constant TIMEOUT_COUNT: integer := 50000000; -- 5s / 100ns
 
 
   -- The number of clocks available to the CIC to process a sample (i.e. the oversampling rate).
@@ -190,6 +191,7 @@ architecture tb of tb_cic_compiler_0 is
 
   signal g_current_rate            : integer   := 8;    -- The rate that the core is currently programmed to use
   signal g_end_simulation          : boolean   := false; -- Set to true to halt the simulation
+  signal g_clock_cnt               : integer   := 0;
 
   -- Test Phase Manager signals and variables
   -- ----------------------------------------
@@ -288,14 +290,20 @@ begin
   clock_gen : process
   begin
     wait for 100 ns; -- Wait for (Verilog) GSR to be de-asserted
-    while g_end_simulation = false loop
-      aclk <= '0';
+    while g_end_simulation = false and g_clock_cnt < TIMEOUT_COUNT loop
+      aclk        <= '0';
       wait for CLOCK_PERIOD/2;
-      aclk <= '1';
+      aclk        <= '1';
       wait for CLOCK_PERIOD/2;
+      g_clock_cnt <= g_clock_cnt + 1;
     end loop;
 
-    report "Simulation finished successfully / Test completed successfully" severity failure;
+    if g_clock_cnt >= TIMEOUT_COUNT then
+      report "Simulation finished successfully / Test completed successfully / TIMEOUT reached" severity failure;
+    else
+      report "Simulation finished successfully / Test completed successfully" severity failure;
+    end if;
+
     wait;
 
   end process clock_gen;
