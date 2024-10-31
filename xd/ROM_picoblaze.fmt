@@ -1,0 +1,33 @@
+ RESET: NAMEREG sA, tmp
+        NAMEREG sB, counter
+        NAMEREG sC, buttons
+        NAMEREG sD, pressed
+        LOAD counter, 00    ; Clear counter register
+        LOAD tmp, 00        ; Clear temporary register
+        LOAD buttons, 00    ; Clear buttons register
+        LOAD pressed, 00    ; Clear pressed register
+ START: INPUT buttons, 00   ; Read buttons state
+        OUTPUT counter, 00  ; Write counter value
+        LOAD tmp, buttons   ; Prevent buttons register overwrite
+        AND tmp, 01         ; Check for first button state
+        COMPARE tmp, 01     ; Check if button1 is pressed
+        JUMP NZ, BTN1_N     ; If button1 not pressed jump
+        LOAD tmp, pressed   ; Prevent pressed register overwrite
+        AND tmp, 01         ; Check for button1 still pressed state
+        COMPARE tmp, 01     ; Check if button1 is still pressed
+        JUMP Z, BTN1_E      ; If button1 still pressed jump to end
+        ADD counter, 01     ; Increment counter
+        OR pressed, 01      ; Set button1 pressed flag
+BTN1_N: AND pressed, FE     ; Clear button1 pressed flag
+BTN1_E: LOAD tmp, buttons   ; Prevent buttons register overwrite
+        AND tmp, 02         ; Check for first button state
+        COMPARE tmp, 02     ; Check if button2 is pressed
+        JUMP NZ, BTN2_N     ; If button2 not pressed jump
+        LOAD tmp, pressed   ; Prevent pressed register overwrite
+        AND tmp, 02         ; Check for button2 still pressed state
+        COMPARE tmp, 02     ; Check if button2 is still pressed
+        JUMP Z, BTN2_E      ; If button2 still pressed jump to end
+        SUB counter, 01     ; Increment counter
+        OR pressed, 02      ; Set button2 pressed flag
+BTN2_N: AND pressed, FD     ; Clear button2 pressed flag
+BTN2_E: JUMP START          ; Infinite loop, jump to START

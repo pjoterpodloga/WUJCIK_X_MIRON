@@ -120,6 +120,11 @@ signal  digit_int   :   std_logic_vector(15 downto 0);
 signal  out_port    :   std_logic_vector(7 downto 0);
 signal  in_port     :   std_logic_vector(7 downto 0);
 
+signal  button_o    :   std_logic_vector(3 downto 0);
+
+signal  read_strobe :   std_logic;
+signal  write_strobe:   std_logic;
+
 begin
 
 PROC: kcpsm6
@@ -130,12 +135,12 @@ PROC: kcpsm6
   port map (               address =>   addr,
                        instruction =>   inst,
                        bram_enable =>   bram,
-                           in_port =>   (others=>'0'),
+                           in_port =>   in_port,
                           out_port =>   out_port,
                            port_id =>   open,
-                      write_strobe =>   open,
+                      write_strobe =>   write_strobe,
                     k_write_strobe =>   open,
-                       read_strobe =>   open,
+                       read_strobe =>   read_strobe,
                          interrupt =>   '0',
                      interrupt_ack =>   open,
                              sleep =>   '0',
@@ -155,7 +160,7 @@ ROM: ROM_picoblaze
 
 DIV:    divider
     GENERIC MAP(
-        NDIV    =>  100_000_000)
+        NDIV    =>  100_000)
     
     PORT MAP(
         clk_i   =>  clk_div_in,
@@ -179,9 +184,25 @@ DEB_BTN:    debounce
         clk_i       =>  clk_i,
         rst_i       =>  rst_i,
         button_i    =>  button_i,
-        button_o    =>  in_port(3 downto 0));
+        button_o    =>  button_o);
 
-digit_int(3  downto 0)  <=  out_port(3 downto 0);
+MEM: process
+begin
+
+    if (rst_i = '1') then
+        digit_int(3  downto 0)  <=  "0000";
+    elsif (rising_edge(write_strobe)) then
+        digit_int(3  downto 0)  <=  out_port(3 downto 0);
+    end if;
+    
+    if (rst_i = '1') then
+        in_port(3  downto 0)  <=  "0000";
+    elsif (rising_edge(read_strobe)) then
+        in_port(3  downto 0)  <=  button_o;
+    end if;
+
+end process;
+
 digit_int(15 downto 4)  <=  (others=>'0');
 
 clk_div_in  <=  clk_i;
@@ -189,5 +210,8 @@ reset       <=  rdl or rst_i;
 
 in_port(7 downto 4)     <= (others=>'0');
 led7_an_o(7 downto 4)   <= (others=>'1');
+
+leds_o(3 downto 0)  <=  in_port(3 downto 0);
+leds_o(7 downto 4)  <=  out_port(7 downto 4);
 
 end Behavioral;

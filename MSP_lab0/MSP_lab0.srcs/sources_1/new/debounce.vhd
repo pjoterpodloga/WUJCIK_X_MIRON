@@ -102,7 +102,7 @@ begin
             
                 if (sw_int_2(i) = '1' and counter(i) /= WAIT_MS) then
                     counter(i) <= counter(i) + 1;
-                elsif (counter(i) = WAIT_MS) then
+                elsif (counter(i) = WAIT_MS and sw_int_2(i) = '1' and button_debounce(i) = '0') then
                     button_debounce(i) <= '1';
                 elsif (sw_int_2(i) = '0')  then
                     counter(i) <= 0;
