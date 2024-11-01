@@ -42,7 +42,13 @@ entity top is
            DA_MCLK      :   out   STD_LOGIC;
            DA_LRCK      :   out   STD_LOGIC;
            DA_SCLK      :   out   STD_LOGIC;
-           DA_SDIN      :   out   STD_LOGIC);
+           DA_SDIN      :   out   STD_LOGIC;
+           LED16_R      :   out   STD_LOGIC;
+           LED16_G      :   out   STD_LOGIC;
+           LED16_B      :   out   STD_LOGIC;
+           LED17_R      :   out   STD_LOGIC;
+           LED17_G      :   out   STD_LOGIC;
+           LED17_B      :   out   STD_LOGIC);
 
 end top;
 
@@ -84,18 +90,52 @@ component data_controller is
         load_out_o      :   out std_logic);
 end component data_controller;
 
-component cic_compiler_0 IS
+component fir_compiler_LP IS
   PORT (
-    aclk                : IN    STD_LOGIC;
-    s_axis_data_tdata   : IN    STD_LOGIC_VECTOR(23 DOWNTO 0);
-    s_axis_data_tvalid  : IN    STD_LOGIC;
-    s_axis_data_tready  : OUT   STD_LOGIC;
-    m_axis_data_tdata   : OUT   STD_LOGIC_VECTOR(23 DOWNTO 0);
-    m_axis_data_tvalid  : OUT   STD_LOGIC
+    aclk : IN STD_LOGIC;
+    s_axis_data_tvalid : IN STD_LOGIC;
+    s_axis_data_tready : OUT STD_LOGIC;
+    s_axis_data_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+    m_axis_data_tvalid : OUT STD_LOGIC;
+    m_axis_data_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0)
   );
-end component cic_compiler_0;
+end component fir_compiler_LP;
 
-signal  div_out :   std_logic_vector(DIV_SIZE-1 downto 0);
+component fir_compiler_BP IS
+  PORT (
+    aclk : IN STD_LOGIC;
+    s_axis_data_tvalid : IN STD_LOGIC;
+    s_axis_data_tready : OUT STD_LOGIC;
+    s_axis_data_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+    m_axis_data_tvalid : OUT STD_LOGIC;
+    m_axis_data_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0)
+  );
+end component fir_compiler_BP;
+
+component fir_compiler_HP IS
+  PORT (
+    aclk : IN STD_LOGIC;
+    s_axis_data_tvalid : IN STD_LOGIC;
+    s_axis_data_tready : OUT STD_LOGIC;
+    s_axis_data_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+    m_axis_data_tvalid : OUT STD_LOGIC;
+    m_axis_data_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0)
+  );
+end component fir_compiler_HP;
+
+component pwm_controller is
+    Generic (
+        BIT_RES :   natural :=  8);
+        
+    Port ( 
+        clk_i       :   in  std_logic;
+        rst_i       :   in  std_logic;
+        read_strobe :   in  std_logic;
+        reset_value :   in  std_logic_vector(BIT_RES-1 downto 0);
+        pwm_o       :   out std_logic);
+end component pwm_controller;
+
+signal  div_out     :   std_logic_vector(DIV_SIZE-1 downto 0);
 
 signal  AD_CS_INT   :   std_logic;
 signal  AD_SCLK_INT :   std_logic;
@@ -110,15 +150,23 @@ signal  DATA_OUT_INT:   std_logic_vector(REG_SIZE-1 downto 0);
 
 signal  LED_INT     :   std_logic_vector(30 downto  0)  :=  (others=>'0');
 
-signal  FDATA_IN    :   std_logic_vector(23 downto 0)   :=  (others=>'0');
-signal  FDATA_OUT   :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  load_int            :   std_logic;
+signal  shift_out_int       :   std_logic;
+signal  shift_in_int        :   std_logic;
 
-signal  load_int        :   std_logic;
-signal  shift_out_int   :   std_logic;
-signal  shift_in_int    :   std_logic;
+signal  filter_in_LEFT      :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  filter_in_RIGHT     :   std_logic_vector(23 downto 0)   :=  (others=>'0');
 
-signal  counter :   natural range 9 downto 0    :=  0;
-signal  fdata_valid :   std_logic   :=  '0';
+signal  filter_out_LEFT_LP  :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  filter_out_LEFT_BP  :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  filter_out_LEFT_HP  :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+
+signal  filter_out_RIGHT_LP :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  filter_out_RIGHT_BP :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+signal  filter_out_RIGHT_HP :   std_logic_vector(23 downto 0)   :=  (others=>'0');
+
+signal  data_valid_LEFT     :   std_logic;
+signal  data_valid_RIGHT    :   std_logic;
 
 begin
 
@@ -167,45 +215,154 @@ CONTROLER:  data_controller
         shift_out_en_o  =>  shift_out_int,
         load_out_o      =>  load_int);
 
-CIC: cic_compiler_0
-  PORT MAP(
+LEFT_LP: fir_compiler_LP
+    PORT MAP(
     aclk                =>  CLK100MHZ,
-    s_axis_data_tdata   =>  FDATA_IN,
-    s_axis_data_tvalid  =>  fdata_valid,
+    s_axis_data_tvalid  =>  data_valid_LEFT,
     s_axis_data_tready  =>  open,
-    m_axis_data_tdata   =>  FDATA_OUT,
-    m_axis_data_tvalid  =>  open);
+    s_axis_data_tdata   =>  filter_in_LEFT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_LEFT_LP);
 
+PWM_LEFT_R: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_LEFT_LP(23 downto 16),
+        pwm_o       =>  LED16_R);
+
+LEFT_BP: fir_compiler_BP
+    PORT MAP(
+    aclk                =>  CLK100MHZ,
+    s_axis_data_tvalid  =>  data_valid_LEFT,
+    s_axis_data_tready  =>  open,
+    s_axis_data_tdata   =>  filter_in_LEFT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_LEFT_BP);
+
+PWM_LEFT_G: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_LEFT_BP(23 downto 16),
+        pwm_o       =>  LED16_G);
+       
+LEFT_HP: fir_compiler_HP
+    PORT MAP(
+    aclk                =>  CLK100MHZ,
+    s_axis_data_tvalid  =>  data_valid_LEFT,
+    s_axis_data_tready  =>  open,
+    s_axis_data_tdata   =>  filter_in_LEFT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_LEFT_HP);
+        
+PWM_LEFT_B: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_LEFT_HP(23 downto 16),
+        pwm_o       =>  LED16_B);
+        
+PWM_RIGHT_R: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_RIGHT_LP(23 downto 16),
+        pwm_o       =>  LED17_R);
+
+RIGHT_LP: fir_compiler_HP
+    PORT MAP(
+    aclk                =>  CLK100MHZ,
+    s_axis_data_tvalid  =>  data_valid_RIGHT,
+    s_axis_data_tready  =>  open,
+    s_axis_data_tdata   =>  filter_in_RIGHT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_RIGHT_LP);
+
+PWM_RIGHT_G: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_RIGHT_BP(23 downto 16),
+        pwm_o       =>  LED17_G);
+   
+RIGHT_BP: fir_compiler_HP
+    PORT MAP(
+    aclk                =>  CLK100MHZ,
+    s_axis_data_tvalid  =>  data_valid_RIGHT,
+    s_axis_data_tready  =>  open,
+    s_axis_data_tdata   =>  filter_in_RIGHT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_RIGHT_BP);
+        
+PWM_RIGHT_B: pwm_controller
+    Generic MAP(
+        BIT_RES =>  8)
+        
+    Port MAP( 
+        clk_i       =>  CLK100MHZ,
+        rst_i       =>  '0',
+        read_strobe =>  load_int,
+        reset_value =>  filter_out_RIGHT_HP(23 downto 16),
+        pwm_o       =>  LED17_B);
+
+RIGHT_HP: fir_compiler_HP
+    PORT MAP(
+    aclk                =>  CLK100MHZ,
+    s_axis_data_tvalid  =>  data_valid_RIGHT,
+    s_axis_data_tready  =>  open,
+    s_axis_data_tdata   =>  filter_in_RIGHT,
+    m_axis_data_tvalid  =>  open,
+    m_axis_data_tdata   =>  filter_out_RIGHT_HP);
+        
 LED_LOAD: process(load_int)
 begin
 
     if (rising_edge(load_int)) then
         LED_INT <=  std_logic_vector(abs(signed(DATA_OUT_INT(30 downto 0))));
         
-        if (AD_CS_INT = '1') then
-        
-            counter <= counter + 1;
-        
-            if(counter = 0) then
-                FDATA_IN    <= DATA_IN_INT(30 downto 7);
-            elsif (counter = 7) then
-                counter <= 0;
-            end if;
+        if (AD_CS_INT = '0') then
+            filter_in_RIGHT <=  LED_INT(30 downto 7);
             
-            DATA_OUT_INT(6  downto 0)   <=  (others=>'0');
-            DATA_OUT_INT(30 downto 7)   <=  FDATA_OUT;
             DATA_OUT_INT(31)            <=  '0';
-        else 
-            DATA_OUT_INT<= (others=>'0');
+            DATA_OUT_INT(30 downto 7)   <=  filter_out_RIGHT_BP;
+            DATA_OUT_INT(6 downto 0)    <=  (others=>'0');
+        else
+            filter_in_LEFT  <=  LED_INT(30 downto 7);
+            
+            DATA_OUT_INT(31)            <=  '0';
+            DATA_OUT_INT(30 downto 7)   <=  filter_out_LEFT_BP;
+            DATA_OUT_INT(6 downto 0)    <=  (others=>'0');
         end if;
         
     end if;
 
 end process;
 
-LED     <=  LED_INT(30 downto 15);
+data_valid_LEFT     <=  load_int and AD_CS_INT;
+data_valid_RIGHT    <=  load_int and not AD_CS_INT;
 
-fdata_valid <=  load_int and AD_CS_INT;
+LED     <=  LED_INT(30 downto 15);
 
 AD_CS_INT   <=  div_out(10);
 AD_SCLK_INT <=  div_out(4);

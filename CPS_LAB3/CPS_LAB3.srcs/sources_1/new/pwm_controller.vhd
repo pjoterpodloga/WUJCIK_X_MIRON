@@ -21,6 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.MATH_REAL.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -33,7 +34,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity pwm_controller is
     Generic (
-        BIT_RES :   natural);
+        BIT_RES :   natural :=  8);
         
     Port ( 
         clk_i       :   in  std_logic;
@@ -54,11 +55,15 @@ component divider is
         q_out   :   out std_logic_vector(SIZE - 1 downto 0));
 end component divider;
 
+constant    FREQ_IN     :   real    :=  100.0e6;
+constant    MOD_FREQ    :   real    :=  10.0e3;
+constant    NDIV        :   natural :=  natural(CEIL(LOG2(FREQ_IN/(MOD_FREQ*(2**real(BIT_RES))))));
+
 signal  last_read   :   std_logic   := '0';
 
 signal  counter         :   unsigned(BIT_RES-1 downto 0)    :=  (others=>'0');
 signal  reset_value_int :   unsigned(BIT_RES-1 downto 0)    :=  (others=>'0');
-signal  div_out         :   std_logic_vector(15 downto 0);
+signal  div_out         :   std_logic_vector(NDIV downto 0);
 
 signal pwm_output       :   std_logic   :=  '0';
 
@@ -66,7 +71,7 @@ begin
 
 FREG_DIV:   divider
     GENERIC MAP(
-        SIZE    =>  16)
+        SIZE    =>  NDIV+1)
     PORT MAP(
         clk_i   =>  clk_i,
         rst_i   =>  rst_i,
@@ -80,7 +85,7 @@ begin
         reset_value_int <= (others=>'0');
         pwm_output  <=  '0';
     elsif (rising_edge(clk_i)) then
-        if (div_out(8 downto 0) = '0'&(7 downto 0 => '1')) then
+        if (div_out(NDIV-1 downto 0) = '0'&(NDIV-2 downto 0 => '1')) then
             counter <= counter + 1;
             
             if (counter = reset_value_int) then
