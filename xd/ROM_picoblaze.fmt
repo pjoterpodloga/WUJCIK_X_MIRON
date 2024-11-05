@@ -1,33 +1,156 @@
- RESET: NAMEREG sA, tmp
-        NAMEREG sB, counter
-        NAMEREG sC, buttons
-        NAMEREG sD, pressed
-        LOAD counter, 00    ; Clear counter register
-        LOAD tmp, 00        ; Clear temporary register
-        LOAD buttons, 00    ; Clear buttons register
-        LOAD pressed, 00    ; Clear pressed register
- START: INPUT buttons, 00   ; Read buttons state
-        OUTPUT counter, 00  ; Write counter value
-        LOAD tmp, buttons   ; Prevent buttons register overwrite
-        AND tmp, 01         ; Check for first button state
-        COMPARE tmp, 01     ; Check if button1 is pressed
-        JUMP NZ, BTN1_N     ; If button1 not pressed jump
-        LOAD tmp, pressed   ; Prevent pressed register overwrite
-        AND tmp, 01         ; Check for button1 still pressed state
-        COMPARE tmp, 01     ; Check if button1 is still pressed
-        JUMP Z, BTN1_E      ; If button1 still pressed jump to end
-        ADD counter, 01     ; Increment counter
-        OR pressed, 01      ; Set button1 pressed flag
-BTN1_N: AND pressed, FE     ; Clear button1 pressed flag
-BTN1_E: LOAD tmp, buttons   ; Prevent buttons register overwrite
-        AND tmp, 02         ; Check for first button state
-        COMPARE tmp, 02     ; Check if button2 is pressed
-        JUMP NZ, BTN2_N     ; If button2 not pressed jump
-        LOAD tmp, pressed   ; Prevent pressed register overwrite
-        AND tmp, 02         ; Check for button2 still pressed state
-        COMPARE tmp, 02     ; Check if button2 is still pressed
-        JUMP Z, BTN2_E      ; If button2 still pressed jump to end
-        SUB counter, 01     ; Increment counter
-        OR pressed, 02      ; Set button2 pressed flag
-BTN2_N: AND pressed, FD     ; Clear button2 pressed flag
-BTN2_E: JUMP START          ; Infinite loop, jump to START
+      RESET: NAMEREG sC, buttons
+             NAMEREG sD, pressed
+             NAMEREG s1, digit1
+             NAMEREG s2, digit2
+             NAMEREG s3, digit3
+             NAMEREG s4, digit4
+             NAMEREG s5, btime
+             NAMEREG s6, dflag   ; 7, blank, 6 - dec, 5 - INCR, 4 - mode, 3:0 - digit
+             NAMEREG s7, enable
+             NAMEREG s8, tmp1
+             NAMEREG s9, tmp2
+             LOAD tmp1, 00       ; Clear temporary register
+             LOAD tmp2, 00
+             LOAD buttons, 00    ; Clear buttons register
+             LOAD pressed, 00    ; Clear pressed register
+             LOAD digit1, 00
+             LOAD digit2, 00
+             LOAD digit3, 00
+             LOAD digit4, 00
+             LOAD btime, 00
+             LOAD dflag, 01
+             LOAD enable, 00
+      START: INPUT buttons, 00   ; Read buttons state
+             OUTPUT digit1, 00
+             OUTPUT digit2, 01
+             OUTPUT digit3, 02
+             OUTPUT digit4, 03
+             LOAD tmp1, dflag
+             AND tmp1, 10
+             COMPARE tmp1, 10
+             JUMP NZ, XD
+             OUTPUT tmp1, 0F
+             JUMP SKIP
+         XD: LOAD tmp1, dflag
+             AND tmp1, 0F
+             XOR tmp1, 0F
+             OUTPUT tmp1, 04
+             JUMP READ_DIGIT
+       SKIP: LOAD tmp1, dflag
+             AND tmp1, 10
+             COMPARE tmp1, 10
+             JUMP NZ, MAIN
+     STATUS: LOAD tmp1, dflag
+             AND tmp1, 20
+             JUMP NZ, DECR
+       INCR: ADD tmp2, 01
+             AND dflag, DF
+             JUMP WRITE_DIGIT
+       DECR: LOAD tmp1, dflag
+             AND tmp1, 40
+             JUMP NZ, MAIN
+             SUB tmp2, 01
+             AND dflag, BF
+             JUMP WRITE_DIGIT
+       MAIN: LOAD tmp1, buttons  ; Prevent buttons register overwrite
+             AND tmp1, 01        ; Check for first button state
+             COMPARE tmp1, 01    ; Check if button1 is pressed
+             JUMP NZ, BTN1_N     ; If button1 not pressed jump
+             LOAD tmp1, pressed  ; Prevent pressed register overwrite
+             AND tmp1, 01        ; Check for button1 still pressed state
+             COMPARE tmp1, 01    ; Check if button1 is still pressed
+             JUMP Z, BTN1_E      ; If button1 still pressed jump to end
+             ADD dflag, 20       ; INCRrement counter
+             OR pressed, 01      ; Set button1 pressed flag
+             JUMP BTN1_E
+     BTN1_N: AND pressed, FE     ; Clear button1 pressed flag
+     BTN1_E: LOAD tmp1, buttons  ; Prevent buttons register overwrite
+             AND tmp1, 02        ; Check for first button state
+             COMPARE tmp1, 02    ; Check if button2 is pressed
+             JUMP NZ, BTN2_N     ; If button2 not pressed jump
+             LOAD tmp1, pressed  ; Prevent pressed register overwrite
+             AND tmp1, 02        ; Check for button2 still pressed state
+             COMPARE tmp1, 02    ; Check if button2 is still pressed
+             JUMP Z, BTN2_E      ; If button2 still pressed jump to end
+             OR dflag, 40        ; Decrement counter
+             OR pressed, 02      ; Set button2 pressed flag
+             JUMP BTN2_E
+     BTN2_N: AND pressed, FD     ; Clear button2 pressed flag
+     BTN2_E: LOAD tmp1, buttons  ; Prevent buttons register overwrite
+             AND tmp1, 04        ; Check for first button state
+             COMPARE tmp1, 04    ; Check if button2 is pressed
+             JUMP NZ, BTN3_N     ; If button2 not pressed jump
+             LOAD tmp1, pressed  ; Prevent pressed register overwrite
+             AND tmp1, 04        ; Check for button2 still pressed state
+             COMPARE tmp1, 04    ; Check if button2 is still pressed
+             JUMP Z, BTN3_E      ; If button2 still pressed jump to end
+             OR pressed, 04      ; Set button2 pressed flag
+             LOAD tmp1, dflag
+             AND tmp1, 0F
+             SL0 tmp1
+             COMPARE tmp1, 10
+             JUMP NZ, BTN3_E
+             LOAD tmp1, 01
+             JUMP BTN3_E
+     BTN3_N: AND pressed, FB     ; Clear button2 pressed flag
+     BTN3_E: OR dflag, tmp1
+             LOAD tmp1, buttons  ; Prevent buttons register overwrite
+             AND tmp1, 08        ; Check for first button state
+             COMPARE tmp1, 08    ; Check if button2 is pressed
+             JUMP NZ, BTN4_N     ; If button2 not pressed jump
+             LOAD tmp1, pressed  ; Prevent pressed register overwrite
+             AND tmp1, 08        ; Check for button2 still pressed state
+             COMPARE tmp1, 08    ; Check if button2 is still pressed
+             JUMP Z, BTN4_E      ; If button2 still pressed jump to end
+             OR pressed, 08      ; Set button2 pressed flag
+             LOAD tmp1, btime
+             COMPARE tmp1, F0
+             JUMP NZ, TSKIP
+             XOR dflag, 10
+             JUMP TEND
+      TSKIP: ADD btime, 01
+       TEND: LOAD tmp1, dflag
+             AND tmp1, 0F
+             SR0 tmp1
+             COMPARE tmp1, 00
+             JUMP NZ, BTN4_E
+             LOAD tmp1, 08
+             JUMP BTN4_E
+     BTN4_N: AND pressed, F7     ; Clear button2 pressed flag
+             AND btime, 00
+     BTN4_E: OR dflag, tmp1
+             JUMP START          ; Infinite loop, jump to START
+ READ_DIGIT: LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD tmp2, digit1
+             COMPARE tmp1, 01
+             JUMP Z, SKIP
+             LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD tmp2, digit2
+             COMPARE tmp1, 04
+             JUMP Z, SKIP
+             LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD tmp2, digit3
+             COMPARE tmp1, 08
+             JUMP Z, SKIP
+             LOAD tmp2, digit4
+             JUMP SKIP
+WRITE_DIGIT: LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD digit1, tmp2
+             COMPARE tmp1, 01
+             JUMP Z, MAIN
+             LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD digit2, tmp2
+             COMPARE tmp1, 04
+             JUMP Z, MAIN
+             LOAD tmp1, dflag
+             AND dflag, 0F
+             LOAD digit3, tmp2
+             COMPARE tmp1, 08
+             JUMP Z, MAIN
+             LOAD digit4, tmp2
+             JUMP MAIN
