@@ -185,16 +185,21 @@ begin
         if (AD_CS_INT = '1') then
         
             counter <= counter + 1;
+            
+            FDATA_IN    <= DATA_IN_INT(30 downto 7);
         
             if(counter = 0) then
-                FDATA_IN    <= DATA_IN_INT(30 downto 7);
+                DATA_OUT_INT(6  downto 0)   <=  (others=>'0');
+                DATA_OUT_INT(30 downto 7)   <=  FDATA_OUT;
+                DATA_OUT_INT(31)            <=  '0';
             elsif (counter = 7) then
                 counter <= 0;
+
+            --else    -- Odkomentowac do zad 2.2
+                --DATA_OUT_INT(31  downto 0)   <=  (others=>'0');
             end if;
             
-            DATA_OUT_INT(6  downto 0)   <=  (others=>'0');
-            DATA_OUT_INT(30 downto 7)   <=  FDATA_OUT;
-            DATA_OUT_INT(31)            <=  '0';
+
         else 
             DATA_OUT_INT<= (others=>'0');
         end if;
@@ -205,7 +210,7 @@ end process;
 
 LED     <=  LED_INT(30 downto 15);
 
-fdata_valid <=  load_int and AD_CS_INT;
+fdata_valid <=  load_int and not AD_CS_INT;
 
 AD_CS_INT   <=  div_out(10);
 AD_SCLK_INT <=  div_out(4);
